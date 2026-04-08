@@ -1,0 +1,466 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0E073CA36B463189566B44FC /* ControlCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD80B13725C2CA1DD426038 /* ControlCenterView.swift */; };
+		145CB49987E653182C7251EC /* ElevenLabsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25B69B764995145C006DB9E4 /* ElevenLabsClient.swift */; };
+		181170898BA1CB7AF55914CF /* CursorTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48706E40C23747FC0745B19E /* CursorTracker.swift */; };
+		1F949E3B1E4BA8FCAFD61634 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32FA4F77D6506695DC861669 /* Extensions.swift */; };
+		2A19C322BC327782481751CA /* DotEnv.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87838A68A510876D1A3C00D2 /* DotEnv.swift */; };
+		2E017D778991481EA9545322 /* InputBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B7CAEF5B0272BDD3785547C /* InputBarView.swift */; };
+		4431D08A5470893CBCC0B1D4 /* ScreenCaptureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD1803CF85AB680799601369 /* ScreenCaptureManager.swift */; };
+		4A8C801ACCB4ADAC5534AF0E /* OverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BB228F0AEAF572ACFA3B4EF /* OverlayWindow.swift */; };
+		4CF3AC2484A8142E26D8297B /* TextToSpeech.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B627D2D9E4FB38CA86CB14F /* TextToSpeech.swift */; };
+		5355DFD90323D50AB04273C5 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6534C2FAC216413F75D44B7 /* AppState.swift */; };
+		5E92B87EAA89B1390CC1CCAB /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E622401B9DCF489D98F2C5 /* HotkeyManager.swift */; };
+		604D82AF74664C702F6F2980 /* ChatBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63F6F445AF865979229E04A /* ChatBubbleView.swift */; };
+		61CF987A5345B41E624BEC5B /* OverlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5803B31DFC2A2992036AF9 /* OverlayContentView.swift */; };
+		632BF7D88623BB6EE07E7950 /* OverlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66E5A97685E335316967735 /* OverlayManager.swift */; };
+		6A3E668DC854B371BB19CDAB /* AnnotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD424F4893A7014BDF9B9165 /* AnnotationView.swift */; };
+		75D9153C17997645882F4C16 /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC15E38C96103D0FE75645D /* OpenAIClient.swift */; };
+		88B7C5364A94A7E9D7FF5916 /* CharacterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DF644E9BE2463D338D1BD8E /* CharacterView.swift */; };
+		904DCF6434C266CDF8439975 /* TeachingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DB3B41B00C5C89C8BE99A0 /* TeachingSession.swift */; };
+		BE3E4B33F71A04CB34E754B6 /* BaymaxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 876D727204B65EC633EF6F9B /* BaymaxApp.swift */; };
+		C36800E563EE542CCBF611D7 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAFC974B492DDEB18252EF55 /* AIService.swift */; };
+		C8A80F9F4EF50F393F2B3632 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1415346143B859C081004E67 /* AppDelegate.swift */; };
+		D5A813C0EC934E4398FCF705 /* SpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B96C23B5C03AF9ADE01EAC /* SpeechRecognizer.swift */; };
+		F6A1D9F362B37A21A0351553 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECEE79DA2D555B34D0C702F /* Models.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		074E00AD1248DE6BB575BD28 /* Baymax.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Baymax.entitlements; sourceTree = "<group>"; };
+		1415346143B859C081004E67 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		25B69B764995145C006DB9E4 /* ElevenLabsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenLabsClient.swift; sourceTree = "<group>"; };
+		2B627D2D9E4FB38CA86CB14F /* TextToSpeech.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextToSpeech.swift; sourceTree = "<group>"; };
+		2B7CAEF5B0272BDD3785547C /* InputBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputBarView.swift; sourceTree = "<group>"; };
+		32FA4F77D6506695DC861669 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		479210E07E23D5AF7A42578E /* Baymax.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Baymax.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		48706E40C23747FC0745B19E /* CursorTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorTracker.swift; sourceTree = "<group>"; };
+		4ECEE79DA2D555B34D0C702F /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		55B96C23B5C03AF9ADE01EAC /* SpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognizer.swift; sourceTree = "<group>"; };
+		5BB228F0AEAF572ACFA3B4EF /* OverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindow.swift; sourceTree = "<group>"; };
+		5DF644E9BE2463D338D1BD8E /* CharacterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterView.swift; sourceTree = "<group>"; };
+		5EC15E38C96103D0FE75645D /* OpenAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIClient.swift; sourceTree = "<group>"; };
+		76DB3B41B00C5C89C8BE99A0 /* TeachingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingSession.swift; sourceTree = "<group>"; };
+		7E9CCAD9DC153B8F913DB29A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		876D727204B65EC633EF6F9B /* BaymaxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaymaxApp.swift; sourceTree = "<group>"; };
+		87838A68A510876D1A3C00D2 /* DotEnv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotEnv.swift; sourceTree = "<group>"; };
+		8FD80B13725C2CA1DD426038 /* ControlCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlCenterView.swift; sourceTree = "<group>"; };
+		AE5803B31DFC2A2992036AF9 /* OverlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayContentView.swift; sourceTree = "<group>"; };
+		C8E622401B9DCF489D98F2C5 /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
+		CAFC974B492DDEB18252EF55 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
+		DD424F4893A7014BDF9B9165 /* AnnotationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationView.swift; sourceTree = "<group>"; };
+		E6534C2FAC216413F75D44B7 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		F63F6F445AF865979229E04A /* ChatBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBubbleView.swift; sourceTree = "<group>"; };
+		F66E5A97685E335316967735 /* OverlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayManager.swift; sourceTree = "<group>"; };
+		FD1803CF85AB680799601369 /* ScreenCaptureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureManager.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		070EBD79FC0AB8BF00C0459B /* App */ = {
+			isa = PBXGroup;
+			children = (
+				1415346143B859C081004E67 /* AppDelegate.swift */,
+				E6534C2FAC216413F75D44B7 /* AppState.swift */,
+				876D727204B65EC633EF6F9B /* BaymaxApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		24E45E3950E257AA922CEBBA /* Voice */ = {
+			isa = PBXGroup;
+			children = (
+				25B69B764995145C006DB9E4 /* ElevenLabsClient.swift */,
+				55B96C23B5C03AF9ADE01EAC /* SpeechRecognizer.swift */,
+				2B627D2D9E4FB38CA86CB14F /* TextToSpeech.swift */,
+			);
+			path = Voice;
+			sourceTree = "<group>";
+		};
+		4D5EC4B37B118DDF16F68133 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				FDAAE598FC4E7C3E6037A39F /* AI */,
+				070EBD79FC0AB8BF00C0459B /* App */,
+				CD3E0348A7A76029CE63961C /* Input */,
+				70500A5F1E366E41182E139D /* Overlay */,
+				DE5AE634857284890F8611F8 /* Screen */,
+				8D62852F56E4EAEA94BC4725 /* Settings */,
+				62606F088F2DC7E5363DE7EA /* Utilities */,
+				24E45E3950E257AA922CEBBA /* Voice */,
+				074E00AD1248DE6BB575BD28 /* Baymax.entitlements */,
+				7E9CCAD9DC153B8F913DB29A /* Info.plist */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		62606F088F2DC7E5363DE7EA /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				87838A68A510876D1A3C00D2 /* DotEnv.swift */,
+				32FA4F77D6506695DC861669 /* Extensions.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		6B70B5209DA2656BFC7A94C3 = {
+			isa = PBXGroup;
+			children = (
+				4D5EC4B37B118DDF16F68133 /* Sources */,
+				FFA56B28353BC99EE157395D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		70500A5F1E366E41182E139D /* Overlay */ = {
+			isa = PBXGroup;
+			children = (
+				DD424F4893A7014BDF9B9165 /* AnnotationView.swift */,
+				5DF644E9BE2463D338D1BD8E /* CharacterView.swift */,
+				F63F6F445AF865979229E04A /* ChatBubbleView.swift */,
+				2B7CAEF5B0272BDD3785547C /* InputBarView.swift */,
+				AE5803B31DFC2A2992036AF9 /* OverlayContentView.swift */,
+				F66E5A97685E335316967735 /* OverlayManager.swift */,
+				5BB228F0AEAF572ACFA3B4EF /* OverlayWindow.swift */,
+			);
+			path = Overlay;
+			sourceTree = "<group>";
+		};
+		8D62852F56E4EAEA94BC4725 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				8FD80B13725C2CA1DD426038 /* ControlCenterView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		CD3E0348A7A76029CE63961C /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				C8E622401B9DCF489D98F2C5 /* HotkeyManager.swift */,
+			);
+			path = Input;
+			sourceTree = "<group>";
+		};
+		DE5AE634857284890F8611F8 /* Screen */ = {
+			isa = PBXGroup;
+			children = (
+				48706E40C23747FC0745B19E /* CursorTracker.swift */,
+				FD1803CF85AB680799601369 /* ScreenCaptureManager.swift */,
+			);
+			path = Screen;
+			sourceTree = "<group>";
+		};
+		FDAAE598FC4E7C3E6037A39F /* AI */ = {
+			isa = PBXGroup;
+			children = (
+				CAFC974B492DDEB18252EF55 /* AIService.swift */,
+				4ECEE79DA2D555B34D0C702F /* Models.swift */,
+				5EC15E38C96103D0FE75645D /* OpenAIClient.swift */,
+				76DB3B41B00C5C89C8BE99A0 /* TeachingSession.swift */,
+			);
+			path = AI;
+			sourceTree = "<group>";
+		};
+		FFA56B28353BC99EE157395D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				479210E07E23D5AF7A42578E /* Baymax.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5928744B7041EE56442CA1E2 /* Baymax */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BD9EA2C94D180BC486164A9C /* Build configuration list for PBXNativeTarget "Baymax" */;
+			buildPhases = (
+				01CD6D7375B9388BE1BE5839 /* Sources */,
+				9029BA7719B93B82B1B121CD /* Install to ~/Applications */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Baymax;
+			packageProductDependencies = (
+			);
+			productName = Baymax;
+			productReference = 479210E07E23D5AF7A42578E /* Baymax.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9969B9C11B77D4B3FBF165C3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = B29570B2BC74583749DFEA6F /* Build configuration list for PBXProject "Baymax" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 6B70B5209DA2656BFC7A94C3;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = FFA56B28353BC99EE157395D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5928744B7041EE56442CA1E2 /* Baymax */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		9029BA7719B93B82B1B121CD /* Install to ~/Applications */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Install to ~/Applications";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "DEST=\"$HOME/Applications/Baymax.app\"\nSRC=\"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app\"\necho \"Installing $SRC → $DEST\"\nrm -rf \"$DEST\"\ncp -R \"$SRC\" \"$DEST\"\n# Re-sign with consistent identity so TCC recognises it across rebuilds\ncodesign --force --deep --sign - \"$DEST\" 2>/dev/null || true\necho \"Install done. Launch from $DEST to keep permissions.\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		01CD6D7375B9388BE1BE5839 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C36800E563EE542CCBF611D7 /* AIService.swift in Sources */,
+				6A3E668DC854B371BB19CDAB /* AnnotationView.swift in Sources */,
+				C8A80F9F4EF50F393F2B3632 /* AppDelegate.swift in Sources */,
+				5355DFD90323D50AB04273C5 /* AppState.swift in Sources */,
+				BE3E4B33F71A04CB34E754B6 /* BaymaxApp.swift in Sources */,
+				88B7C5364A94A7E9D7FF5916 /* CharacterView.swift in Sources */,
+				604D82AF74664C702F6F2980 /* ChatBubbleView.swift in Sources */,
+				0E073CA36B463189566B44FC /* ControlCenterView.swift in Sources */,
+				181170898BA1CB7AF55914CF /* CursorTracker.swift in Sources */,
+				2A19C322BC327782481751CA /* DotEnv.swift in Sources */,
+				145CB49987E653182C7251EC /* ElevenLabsClient.swift in Sources */,
+				1F949E3B1E4BA8FCAFD61634 /* Extensions.swift in Sources */,
+				5E92B87EAA89B1390CC1CCAB /* HotkeyManager.swift in Sources */,
+				2E017D778991481EA9545322 /* InputBarView.swift in Sources */,
+				F6A1D9F362B37A21A0351553 /* Models.swift in Sources */,
+				75D9153C17997645882F4C16 /* OpenAIClient.swift in Sources */,
+				61CF987A5345B41E624BEC5B /* OverlayContentView.swift in Sources */,
+				632BF7D88623BB6EE07E7950 /* OverlayManager.swift in Sources */,
+				4A8C801ACCB4ADAC5534AF0E /* OverlayWindow.swift in Sources */,
+				4431D08A5470893CBCC0B1D4 /* ScreenCaptureManager.swift in Sources */,
+				D5A813C0EC934E4398FCF705 /* SpeechRecognizer.swift in Sources */,
+				904DCF6434C266CDF8439975 /* TeachingSession.swift in Sources */,
+				4CF3AC2484A8142E26D8297B /* TextToSpeech.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		40CCF1D3EB88D12E5DA088E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		6E17CA1D3014294C2895EA77 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/Baymax.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = Sources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.baymax.assistant;
+				PRODUCT_NAME = Baymax;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		822F4C47D8A609E3A5FFEA48 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/Baymax.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = Sources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.baymax.assistant;
+				PRODUCT_NAME = Baymax;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		DD49532D742F74D30EF970F7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B29570B2BC74583749DFEA6F /* Build configuration list for PBXProject "Baymax" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				40CCF1D3EB88D12E5DA088E3 /* Debug */,
+				DD49532D742F74D30EF970F7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BD9EA2C94D180BC486164A9C /* Build configuration list for PBXNativeTarget "Baymax" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6E17CA1D3014294C2895EA77 /* Debug */,
+				822F4C47D8A609E3A5FFEA48 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 9969B9C11B77D4B3FBF165C3 /* Project object */;
+}

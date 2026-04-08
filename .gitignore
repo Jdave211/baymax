@@ -1,0 +1,22 @@
+## Xcode
+Baymax.xcodeproj/xcuserdata/
+Baymax.xcodeproj/project.xcworkspace/xcuserdata/
+Baymax.xcodeproj/project.xcworkspace/xcshareddata/
+DerivedData/
+*.xcuserstate
+*.xcscmblueprint
+
+## Build
+build/
+*.app
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## Env
+.env
+
+## macOS
+.DS_Store
+*.swp
+*~.nib
