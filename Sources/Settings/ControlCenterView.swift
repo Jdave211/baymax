@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum LLMProvider: String, CaseIterable, Identifiable {
-    case openai = "OpenAI (GPT-4o mini)"
+    case openai = "OpenAI (GPT-5.4 mini)"
     case anthropic = "Anthropic (Claude 3.5)"
     case gemini = "Google (Gemini 1.5 Flash)"
     case deepseek = "DeepSeek (V3)"
@@ -10,7 +10,7 @@ enum LLMProvider: String, CaseIterable, Identifiable {
 
     var envKey: String {
         switch self {
-        case .openai: return "BAYMAX_OPENAI_KEY"
+        case .openai: return "OPENAI_API_KEY"
         case .anthropic: return "BAYMAX_ANTHROPIC_KEY"
         case .gemini: return "BAYMAX_GEMINI_KEY"
         case .deepseek: return "BAYMAX_DEEPSEEK_KEY"
@@ -26,9 +26,9 @@ struct ControlCenterView: View {
             // Header
             HStack(spacing: 8) {
                 Circle()
-                    .fill(Color(hex: "22C55E")) // Green dot
+                    .fill(Color(hex: "3B82F6")) // Blue dot
                     .frame(width: 8, height: 8)
-                    .shadow(color: Color(hex: "22C55E").opacity(0.6), radius: 4)
+                    .shadow(color: Color(hex: "3B82F6").opacity(0.6), radius: 4)
 
                 Text("Baymax")
                     .font(.system(size: 16, weight: .bold, design: .rounded))
@@ -64,6 +64,45 @@ struct ControlCenterView: View {
             Divider()
                 .background(.white.opacity(0.1))
 
+            // Permissions
+            VStack(alignment: .leading, spacing: 12) {
+                Text("PERMISSIONS")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .tracking(0.5)
+
+                permissionRow(
+                    title: "Screen Recording",
+                    granted: appState.screenRecordingGranted,
+                    actionTitle: "Grant"
+                ) {
+                    Task { @MainActor in
+                        _ = await AppDelegate.shared.requestScreenRecordingPermission()
+                    }
+                }
+
+                permissionRow(
+                    title: "Accessibility",
+                    granted: appState.accessibilityGranted,
+                    actionTitle: "Grant"
+                ) {
+                    AppDelegate.shared.promptAccessibilityIfNeeded()
+                    AppDelegate.shared.openAccessibilitySettings()
+                }
+
+                permissionRow(
+                    title: "Microphone",
+                    granted: appState.microphoneGranted,
+                    actionTitle: "Grant"
+                ) {
+                    AppDelegate.shared.requestMicrophonePermission()
+                }
+            }
+            .padding(20)
+
+            Divider()
+                .background(.white.opacity(0.1))
+
             // LLM Settings
             VStack(alignment: .leading, spacing: 16) {
                 Text("AI PROVIDER")
@@ -77,14 +116,8 @@ struct ControlCenterView: View {
                     }
                 }
                 .labelsHidden()
-
-                SecureField("API Key", text: $appState.currentApiKey)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.system(.body, design: .monospaced))
             }
             .padding(20)
-
-            Spacer(minLength: 0)
 
             Divider()
                 .background(.white.opacity(0.1))
@@ -112,5 +145,35 @@ struct ControlCenterView: View {
 
     private func quit() {
         AppDelegate.shared.quitApp()
+    }
+
+    @ViewBuilder
+    private func permissionRow(
+        title: String,
+        granted: Bool,
+        actionTitle: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(granted ? Color(hex: "3B82F6") : Color(hex: "F59E0B"))
+                .frame(width: 7, height: 7)
+
+            Text(title)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.92))
+
+            Spacer()
+
+            if granted {
+                Text("Granted")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color(hex: "3B82F6"))
+            } else {
+                Button(actionTitle, action: action)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+            }
+        }
     }
 }

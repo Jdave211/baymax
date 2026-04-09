@@ -8,7 +8,7 @@ Ask "how do I crop a video?" while in DaVinci Resolve and Baymax captures your s
 
 ## How it works
 
-1. **⌘⇧B** → Baymax appears, starts listening
+1. **Hold Control + Option** → Baymax listens while held
 2. Talk naturally — "How do I add a LUT in DaVinci?"
 3. Baymax captures your screen → GPT-4o Vision analyzes it
 4. For each step:
@@ -55,15 +55,16 @@ Create a local `.env` in the repo root with your keys. Baymax reads from it on l
 Then in Xcode:
 1. **Build & Run** (⌘R)
 2. Grant **Screen Recording** + **Accessibility** + **Microphone** permissions
+   - On newer macOS versions, Screen Recording may require clicking `+` and adding `~/Applications/Baymax.app` manually.
 3. Hold **Control + Option** to talk
 
 ## Usage
 
 | Action | How |
 |--------|-----|
-| Activate | **⌘⇧B** |
+| Activate / Talk | **Hold Control + Option** |
 | Ask a question | Talk (voice is default) or click ⌨ to type |
-| Dismiss | **Escape** or **⌘⇧B** again |
+| Dismiss | **Escape** |
 
 ### Example questions
 - "How do I crop a video in DaVinci Resolve?"

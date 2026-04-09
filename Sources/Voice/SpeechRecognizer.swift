@@ -1,8 +1,10 @@
 import AVFoundation
 import AppKit
+import Speech
 
 /// Push-to-talk capture.
-/// Records while Ctrl+Option is held and transcribes the clip with OpenAI Whisper when released.
+/// Records while Ctrl+Option is held, streams live speech recognition locally,
+/// and falls back to OpenAI transcription if the live pass is empty.
 @MainActor
 final class SpeechRecognizer: ObservableObject {
     @Published var transcript = ""
@@ -13,15 +15,24 @@ final class SpeechRecognizer: ObservableObject {
     var onError: ((String) -> Void)?
 
     private let openAIKeyProvider: () -> String
-    private var recorder: AVAudioRecorder?
-    private var meterTimer: Timer?
+    private let audioEngine = AVAudioEngine()
+    private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    private var recognitionTask: SFSpeechRecognitionTask?
+    private var recordingFile: AVAudioFile?
     private var recordingURL: URL?
     private var transcriptionTask: Task<Void, Never>?
+    private var finalizeTask: Task<Void, Never>?
+    private var recordingStartedAt: Date?
+    private var bestTranscript = ""
+    private var localRecognitionFailed = false
+    private var hasDeliveredResult = false
+    private var isStopping = false
 
     /// Prevent re-entrant startListening calls while permission dialog is showing
     private var isRequestingPermission = false
 
-    init(openAIKeyProvider: @escaping () -> String = { DotEnv.value(for: "BAYMAX_OPENAI_KEY") ?? "" }) {
+    init(openAIKeyProvider: @escaping () -> String = { DotEnv.value(for: "OPENAI_API_KEY") ?? DotEnv.value(for: "BAYMAX_OPENAI_KEY") ?? "" }) {
         self.openAIKeyProvider = openAIKeyProvider
     }
 
@@ -34,7 +45,7 @@ final class SpeechRecognizer: ObservableObject {
 
         switch status {
         case .authorized:
-            beginRecording()
+            requestSpeechPermissionIfNeededAndBegin()
         case .notDetermined:
             // Request permission once, then start — guard prevents re-entry
             isRequestingPermission = true
@@ -44,7 +55,7 @@ final class SpeechRecognizer: ObservableObject {
                 }
                 isRequestingPermission = false
                 if granted {
-                    beginRecording()
+                    requestSpeechPermissionIfNeededAndBegin()
                 } else {
                     onError?("Microphone access denied — enable it in System Settings → Privacy → Microphone")
                 }
@@ -57,10 +68,11 @@ final class SpeechRecognizer: ObservableObject {
     func stopListening() {
         guard isListening else { return }
 
-        let duration = recorder?.currentTime ?? 0
-        recorder?.stop()
-        meterTimer?.invalidate()
-        meterTimer = nil
+        let duration = recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+        isStopping = true
+        audioEngine.stop()
+        audioEngine.inputNode.removeTap(onBus: 0)
+        recognitionRequest?.endAudio()
         isListening = false
         audioLevel = 0
 
@@ -72,10 +84,115 @@ final class SpeechRecognizer: ObservableObject {
             return
         }
 
-        if duration < 0.3 {
+        if duration < 0.2 {
             print("[Baymax] Recording too short — ignoring")
             onError?("Hold Ctrl+Option a bit longer and speak")
             cleanup()
+            return
+        }
+
+        finalizeTask?.cancel()
+        finalizeTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            await self?.finalizeRecognition(using: url)
+        }
+    }
+
+    // MARK: - Private
+
+    private func requestSpeechPermissionIfNeededAndBegin() {
+        switch SFSpeechRecognizer.authorizationStatus() {
+        case .authorized:
+            beginRecording(enableLiveRecognition: true)
+        case .notDetermined:
+            isRequestingPermission = true
+            SFSpeechRecognizer.requestAuthorization { [weak self] status in
+                Task { @MainActor in
+                    self?.isRequestingPermission = false
+                    self?.beginRecording(enableLiveRecognition: status == .authorized)
+                }
+            }
+        default:
+            beginRecording(enableLiveRecognition: false)
+        }
+    }
+
+    private func beginRecording(enableLiveRecognition: Bool) {
+        guard !isListening else { return }
+
+        transcript = ""
+        audioLevel = 0
+        bestTranscript = ""
+        localRecognitionFailed = false
+        hasDeliveredResult = false
+        isStopping = false
+        recordingStartedAt = Date()
+        finalizeTask?.cancel()
+        transcriptionTask?.cancel()
+        teardownSpeechPipeline(deleteRecording: true)
+
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("baymax_\(UUID().uuidString).wav")
+        recordingURL = url
+
+        do {
+            let inputNode = audioEngine.inputNode
+            let format = inputNode.outputFormat(forBus: 0)
+            recordingFile = try AVAudioFile(forWriting: url, settings: format.settings)
+
+            if enableLiveRecognition, let speechRecognizer {
+                let request = SFSpeechAudioBufferRecognitionRequest()
+                request.shouldReportPartialResults = true
+                recognitionRequest = request
+
+                recognitionTask = speechRecognizer.recognitionTask(with: request) { [weak self] result, error in
+                    if let result {
+                        let text = result.bestTranscription.formattedString.trimmingCharacters(in: .whitespacesAndNewlines)
+                        Task { @MainActor in
+                            guard let self else { return }
+                            if !text.isEmpty {
+                                self.bestTranscript = text
+                                self.transcript = text
+                            }
+                        }
+                    }
+
+                    if let error {
+                        Task { @MainActor in
+                            guard let self, !self.isStopping else { return }
+                            self.localRecognitionFailed = true
+                            print("[Baymax] Live speech recognition failed: \(error.localizedDescription)")
+                        }
+                    }
+                }
+            }
+
+            let request = recognitionRequest
+            let recordingFile = self.recordingFile
+            inputNode.removeTap(onBus: 0)
+            inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
+                request?.append(buffer)
+                try? recordingFile?.write(from: buffer)
+                Task { @MainActor in
+                    self?.updateMeter(from: buffer)
+                }
+            }
+
+            audioEngine.prepare()
+            try audioEngine.start()
+            isListening = true
+            print("[Baymax] Recording started → \(url.lastPathComponent)")
+        } catch {
+            print("[Baymax] Audio engine start failed: \(error)")
+            onError?("Could not start microphone: \(error.localizedDescription)")
+            cleanup()
+        }
+    }
+
+    private func finalizeRecognition(using url: URL) async {
+        let cleaned = bestTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !localRecognitionFailed, cleaned.count >= 2 {
+            deliverTranscript(cleaned)
             return
         }
 
@@ -87,31 +204,24 @@ final class SpeechRecognizer: ObservableObject {
             return
         }
 
-        print("[Baymax] Sending audio to Whisper...")
+        print("[Baymax] Falling back to OpenAI transcription (local_failed=\(localRecognitionFailed), local_len=\(cleaned.count))...")
         transcriptionTask = Task { [weak self] in
             do {
                 let client = OpenAIClient(apiKey: key)
                 let text = try await client.transcribeAudio(fileURL: url)
                 let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                print("[Baymax] Whisper transcript: \"\(cleaned)\"")
+                print("[Baymax] Transcript: \"\(cleaned)\"")
                 await MainActor.run {
-                    self?.transcript = text
-                    self?.cleanup()
-                    if !cleaned.isEmpty {
-                        self?.onFinalized?(cleaned)
-                    } else {
-                        self?.onError?("Couldn't make that out — try again")
-                    }
+                    self?.deliverTranscript(cleaned)
                 }
             } catch is CancellationError {
-                // Intentionally cancelled (user held again) — silent
                 await MainActor.run { self?.cleanup() }
             } catch {
                 let msg = (error as NSError).code == -999 ? "cancelled" : error.localizedDescription
                 if msg == "cancelled" {
                     await MainActor.run { self?.cleanup() }
                 } else {
-                    print("[Baymax] Whisper failed: \(error)")
+                    print("[Baymax] Transcription failed: \(error)")
                     await MainActor.run {
                         self?.onError?("Transcription failed — try again")
                         self?.cleanup()
@@ -121,70 +231,61 @@ final class SpeechRecognizer: ObservableObject {
         }
     }
 
-    // MARK: - Private
-
-    private func beginRecording() {
-        guard !isListening else { return }
-
-        transcript = ""
-        audioLevel = 0
-        transcriptionTask?.cancel()
-        transcriptionTask = nil
-
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("baymax_\(UUID().uuidString).m4a")
-        recordingURL = url
-
-        let settings: [String: Any] = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 44_100,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
-        ]
-
-        do {
-            recorder = try AVAudioRecorder(url: url, settings: settings)
-            recorder?.isMeteringEnabled = true
-            recorder?.prepareToRecord()
-            guard recorder?.record() == true else {
-                print("[Baymax] recorder.record() returned false")
-                onError?("Microphone unavailable — try again")
-                cleanup()
-                return
-            }
-            isListening = true
-            print("[Baymax] Recording started → \(url.lastPathComponent)")
-
-            meterTimer?.invalidate()
-            meterTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-                Task { @MainActor in self?.updateMeter() }
-            }
-            RunLoop.main.add(meterTimer!, forMode: .common)
-        } catch {
-            print("[Baymax] AVAudioRecorder init failed: \(error)")
-            onError?("Could not start microphone: \(error.localizedDescription)")
-            cleanup()
+    private func deliverTranscript(_ text: String) {
+        guard !hasDeliveredResult else { return }
+        let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        transcript = cleaned
+        hasDeliveredResult = true
+        if !cleaned.isEmpty {
+            onFinalized?(cleaned)
+        } else {
+            onError?("Couldn't make that out — try again")
         }
+        cleanup()
     }
 
-    private func updateMeter() {
-        guard let recorder else { return }
-        recorder.updateMeters()
-        let power = recorder.averagePower(forChannel: 0)
-        audioLevel = max(0, min(1, pow(10, power / 20) * 1.7))
+    private func updateMeter(from buffer: AVAudioPCMBuffer) {
+        guard let channelData = buffer.floatChannelData?[0] else { return }
+        let frameCount = Int(buffer.frameLength)
+        guard frameCount > 0 else { return }
+
+        var sum: Float = 0
+        for index in 0..<frameCount {
+            let sample = channelData[index]
+            sum += sample * sample
+        }
+        let rms = sqrt(sum / Float(frameCount))
+        audioLevel = max(0, min(1, rms * 4.5))
     }
 
     private func cleanup() {
-        meterTimer?.invalidate()
-        meterTimer = nil
-        recorder = nil
-        if let recordingURL {
-            try? FileManager.default.removeItem(at: recordingURL)
-        }
-        recordingURL = nil
+        finalizeTask?.cancel()
+        finalizeTask = nil
+        teardownSpeechPipeline(deleteRecording: true)
         isListening = false
+        isStopping = false
         audioLevel = 0
+        recordingStartedAt = nil
     }
 
-    deinit { meterTimer?.invalidate() }
+    private func teardownSpeechPipeline(deleteRecording: Bool) {
+        audioEngine.stop()
+        audioEngine.inputNode.removeTap(onBus: 0)
+        recognitionTask?.cancel()
+        recognitionTask = nil
+        recognitionRequest = nil
+        recordingFile = nil
+        transcriptionTask?.cancel()
+        transcriptionTask = nil
+
+        if deleteRecording, let recordingURL {
+            try? FileManager.default.removeItem(at: recordingURL)
+            self.recordingURL = nil
+        }
+    }
+
+    deinit {
+        finalizeTask?.cancel()
+        audioEngine.stop()
+    }
 }

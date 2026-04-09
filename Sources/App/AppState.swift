@@ -1,8 +1,17 @@
 import SwiftUI
 import Combine
+import AppKit
+import AVFoundation
+import CoreGraphics
 
 @MainActor
 final class AppState: ObservableObject {
+    static let defaultElevenLabsVoiceId = "21m00Tcm4TlvDq8ikWAM"
+    private static let baymaxElevenLabsVoiceIds: Set<String> = [
+        "vMjdmwcqrdbjvqYck3r3",
+        "BMNKnbWPKkpADnbjwE1T"
+    ]
+
     @Published var isActive = false
     @Published var mode: AssistantMode = .idle
 
@@ -20,6 +29,14 @@ final class AppState: ObservableObject {
     @Published var totalSteps: Int = 0
     @Published var currentLabel: String? = nil
     @Published var spokenSubtitle: String? = nil
+    @Published var targetMarkerPoint: CGPoint? = nil
+    @Published var targetMarkerLabel: String? = nil
+    @Published var targetMarkerSource: String? = nil
+
+    // Permissions
+    @Published var screenRecordingGranted = false
+    @Published var accessibilityGranted = false
+    @Published var microphoneGranted = false
 
     // Multi-LLM Provider
     @Published var llmProvider: LLMProvider {
@@ -57,7 +74,7 @@ final class AppState: ObservableObject {
         let provider = LLMProvider(rawValue: savedProviderName) ?? .openai
         self.llmProvider = provider
 
-        let resolvedKey = env[provider.envKey]
+        let resolvedKey = Self.apiKeyFromEnv(for: provider, env: env)
             ?? UserDefaults.standard.string(forKey: "baymax_key_\(provider.rawValue)")
             ?? ""
         self.currentApiKey = resolvedKey
@@ -67,9 +84,10 @@ final class AppState: ObservableObject {
             ?? ""
         self.elevenLabsKey = resolvedELKey
 
-        let resolvedVoiceId = env["ELEVENLABS_VOICE_ID"]
-            ?? UserDefaults.standard.string(forKey: "baymax_elevenlabs_voice")
-            ?? "21m00Tcm4TlvDq8ikWAM"
+        let savedVoiceId = UserDefaults.standard.string(forKey: "baymax_elevenlabs_voice")
+        let resolvedVoiceId = Self.sanitizedElevenLabsVoiceId(env["ELEVENLABS_VOICE_ID"])
+            ?? Self.sanitizedElevenLabsVoiceId(savedVoiceId)
+            ?? Self.defaultElevenLabsVoiceId
         self.elevenLabsVoiceId = resolvedVoiceId
 
         // didSet doesn't fire during init — persist loaded values explicitly
@@ -83,7 +101,7 @@ final class AppState: ObservableObject {
 
         // Also persist keys for all other providers from .env so switching works
         for p in LLMProvider.allCases where p != provider {
-            if let envVal = env[p.envKey], !envVal.isEmpty {
+            if let envVal = Self.apiKeyFromEnv(for: p, env: env), !envVal.isEmpty {
                 UserDefaults.standard.set(envVal, forKey: "baymax_key_\(p.rawValue)")
             }
         }
@@ -92,6 +110,8 @@ final class AppState: ObservableObject {
         print("[Baymax]   currentApiKey: \(resolvedKey.isEmpty ? "EMPTY" : "\(resolvedKey.prefix(8))...")")
         print("[Baymax]   openAI (UD):   \(apiKey(for: .openai).isEmpty ? "EMPTY" : "\(apiKey(for: .openai).prefix(8))...")")
         print("[Baymax]   elevenLabs:    \(resolvedELKey.isEmpty ? "EMPTY" : "\(resolvedELKey.prefix(8))...")")
+
+        refreshPermissionStatus()
     }
 
     func apiKey(for provider: LLMProvider) -> String {
@@ -102,8 +122,34 @@ final class AppState: ObservableObject {
         UserDefaults.standard.set(key, forKey: "baymax_key_\(provider.rawValue)")
     }
 
+    private static func apiKeyFromEnv(for provider: LLMProvider, env: [String: String]) -> String? {
+        switch provider {
+        case .openai:
+            // Canonical key name is OPENAI_API_KEY; keep BAYMAX_OPENAI_KEY as legacy fallback.
+            return env["OPENAI_API_KEY"] ?? env["BAYMAX_OPENAI_KEY"]
+        default:
+            return env[provider.envKey]
+        }
+    }
+
+    private static func sanitizedElevenLabsVoiceId(_ raw: String?) -> String? {
+        guard let raw else { return nil }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if baymaxElevenLabsVoiceIds.contains(trimmed) {
+            return nil
+        }
+        return trimmed
+    }
+
     func hasValidProvider() -> Bool {
         return !currentApiKey.isEmpty
+    }
+
+    func refreshPermissionStatus() {
+        screenRecordingGranted = CGPreflightScreenCaptureAccess()
+        accessibilityGranted = AXIsProcessTrusted()
+        microphoneGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
     }
 
     func reset() {
@@ -115,5 +161,8 @@ final class AppState: ObservableObject {
         totalSteps = 0
         currentLabel = nil
         spokenSubtitle = nil
+        targetMarkerPoint = nil
+        targetMarkerLabel = nil
+        targetMarkerSource = nil
     }
 }

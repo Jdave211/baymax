@@ -79,11 +79,12 @@ final class OverlayManager {
             do {
                 let img = try await screenCapture.capture()
                 self.preCapture = img
-                self.preCaptureSize = NSScreen.main?.frame.size ?? CGSize(width: 1920, height: 1080)
+                self.preCaptureSize = CGSize(width: img.width, height: img.height)
                 print("[Baymax] Screen pre-captured")
             } catch {
                 print("[Baymax] Pre-capture failed: \(error.localizedDescription)")
                 self.preCapture = nil
+                self.preCaptureSize = nil
             }
         }
     }
@@ -147,10 +148,10 @@ final class OverlayManager {
             Task { @MainActor in
                 guard let self else { return }
                 self.appState.cursorPosition = position
-                if self.appState.mode == .idle || self.appState.mode == .listening {
+                if self.appState.mode == .idle || self.appState.mode == .listening || self.appState.mode == .thinking {
                     self.appState.characterPosition = CGPoint(
-                        x: position.x + 50,
-                        y: position.y - 10
+                        x: position.x + 30,
+                        y: position.y + 28
                     )
                 }
             }
@@ -167,7 +168,7 @@ final class OverlayManager {
             return
         }
 
-        guard appState.hasValidProvider() else {
+        guard appState.hasValidProvider() || !appState.openAIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             print("[Baymax] No valid API key for \(appState.llmProvider.rawValue)")
             appState.spokenSubtitle = "Please set an API key in the menu bar first."
             appState.mode = .idle
@@ -177,7 +178,6 @@ final class OverlayManager {
         print("[Baymax] Question: \(question)")
         appState.mode = .thinking
         appState.spokenSubtitle = "Thinking..."
-        appState.characterPosition = appState.dockedPosition
 
         let screenshot = preCapture
         let screenshotSize = preCaptureSize
@@ -192,7 +192,16 @@ final class OverlayManager {
     /// Called when transcription fails — reset gracefully
     private func handleTranscriptionError(_ message: String) {
         print("[Baymax] Transcription error: \(message)")
-        appState.spokenSubtitle = "Couldn't hear that. Hold Ctrl+Option and try again."
+        let lower = message.lowercased()
+        if lower.contains("microphone access denied") {
+            appState.spokenSubtitle = "Microphone access is off. Enable it in System Settings and try again."
+        } else if lower.contains("openai api key missing") {
+            appState.spokenSubtitle = "Speech transcription needs an OpenAI key in Baymax menu settings."
+        } else if lower.contains("transcription failed") {
+            appState.spokenSubtitle = "Transcription failed. Check your OpenAI key/network and try again."
+        } else {
+            appState.spokenSubtitle = message
+        }
         appState.mode = .idle
         Task {
             try? await Task.sleep(nanoseconds: 3_000_000_000)

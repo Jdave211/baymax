@@ -64,7 +64,7 @@ final class OpenAIClient: @unchecked Sendable {
 
     // MARK: - Text to Speech
 
-    func textToSpeech(text: String, voice: String = "nova") async throws -> Data {
+    func textToSpeech(text: String, voice: String = "alloy") async throws -> Data {
         let url = URL(string: "\(baseURL)/audio/speech")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -94,7 +94,19 @@ final class OpenAIClient: @unchecked Sendable {
 
     // MARK: - Speech To Text
 
-    func transcribeAudio(fileURL: URL, model: String = "whisper-1") async throws -> String {
+    func transcribeAudio(fileURL: URL, model: String = "gpt-4o-mini-transcribe") async throws -> String {
+        do {
+            return try await transcribeAudioAttempt(fileURL: fileURL, model: model)
+        } catch {
+            guard model != "whisper-1", shouldFallbackTranscription(error) else {
+                throw error
+            }
+            print("[Baymax] STT model \(model) failed, retrying with whisper-1: \(error.localizedDescription)")
+            return try await transcribeAudioAttempt(fileURL: fileURL, model: "whisper-1")
+        }
+    }
+
+    private func transcribeAudioAttempt(fileURL: URL, model: String) async throws -> String {
         let url = URL(string: "\(baseURL)/audio/transcriptions")!
         let boundary = "Boundary-\(UUID().uuidString)"
 
@@ -117,8 +129,12 @@ final class OpenAIClient: @unchecked Sendable {
         append("\(model)\r\n")
 
         append("--\(boundary)\r\n")
+        append("Content-Disposition: form-data; name=\"response_format\"\r\n\r\n")
+        append("json\r\n")
+
+        append("--\(boundary)\r\n")
         append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileURL.lastPathComponent)\"\r\n")
-        append("Content-Type: audio/mp4\r\n\r\n")
+        append("Content-Type: \(mimeType(for: fileURL))\r\n\r\n")
         body.append(fileData)
         append("\r\n")
         append("--\(boundary)--\r\n")
@@ -136,6 +152,43 @@ final class OpenAIClient: @unchecked Sendable {
         }
 
         return text
+    }
+
+    private func mimeType(for fileURL: URL) -> String {
+        switch fileURL.pathExtension.lowercased() {
+        case "wav":
+            return "audio/wav"
+        case "m4a":
+            return "audio/mp4"
+        case "mp3":
+            return "audio/mpeg"
+        case "ogg":
+            return "audio/ogg"
+        default:
+            return "application/octet-stream"
+        }
+    }
+
+    private func shouldFallbackTranscription(_ error: Error) -> Bool {
+        guard let baymaxError = error as? BaymaxError else { return false }
+        switch baymaxError {
+        case .apiError(let code, let message):
+            let lower = message.lowercased()
+            return code == 400
+                || code == 401
+                || code == 404
+                || code == 429
+                || (500...599).contains(code)
+                || lower.contains("model")
+                || lower.contains("not found")
+                || lower.contains("unsupported")
+        case .networkError:
+            return true
+        case .parseError:
+            return true
+        default:
+            return false
+        }
     }
 }
 

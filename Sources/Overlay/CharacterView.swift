@@ -7,30 +7,44 @@ struct CharacterView: View {
     let mode: AssistantMode
 
     @State private var floating = false
-    @State private var isBlinking = false
+
+    private var cursorSize: CGFloat { max(11, Self.systemCursorSize * 0.88) }
+    private var bodySize: CGSize {
+        switch mode {
+        case .idle, .teaching:
+            return CGSize(width: max(cursorSize + 6, 26), height: max(cursorSize + 6, 26))
+        case .listening:
+            return CGSize(width: 20, height: 20)
+        case .thinking:
+            return CGSize(width: 18, height: 18)
+        }
+    }
+    private var floatOffset: CGFloat { max(0.8, bodySize.height * 0.05) }
+    private var tiltAngle: Double { -2.5 }
 
     var body: some View {
         ZStack {
             ZStack {
-                if mode == .listening {
-                    ListeningAccent()
-                        .scaleEffect(floating ? 1.03 : 0.98)
-                        .rotationEffect(.degrees(-2))
-                } else {
+                switch mode {
+                case .idle, .teaching:
                     cursorImage
-                        .overlay(alignment: .center) {
-                            stateOverlay
-                        }
                         .scaleEffect(floating ? 1.03 : 0.98)
-                        .rotationEffect(.degrees(-2))
+                        .rotationEffect(.degrees(tiltAngle))
+                case .listening:
+                    VoiceGlyph()
+                        .scaleEffect(floating ? 1.03 : 0.98)
+                        .rotationEffect(.degrees(tiltAngle))
+                case .thinking:
+                    LoadingGlyph()
+                        .scaleEffect(floating ? 1.03 : 0.98)
+                        .rotationEffect(.degrees(tiltAngle))
                 }
             }
-            .offset(y: floating ? -3 : 3)
+            .offset(y: floating ? -floatOffset : floatOffset)
         }
-        .frame(width: 44, height: 46)
+        .frame(width: bodySize.width, height: bodySize.height)
         .onAppear {
             floating = true
-            startBlinkLoop()
         }
         .animation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true), value: floating)
     }
@@ -38,164 +52,160 @@ struct CharacterView: View {
     private var cursorImage: some View {
         Image(nsImage: Self.cursorNSImage)
             .resizable()
+            .renderingMode(.template)
             .interpolation(.high)
             .antialiased(true)
             .aspectRatio(contentMode: .fit)
-            .frame(width: 37.5, height: 37.5)
+            .frame(width: cursorSize, height: cursorSize)
             // Nudge the image so the tip behaves like the anchor point.
-            .offset(x: -1, y: -3)
-            .shadow(color: .black.opacity(0.22), radius: 4, x: 0, y: 2)
+            .offset(x: max(0.4, cursorSize * 0.03), y: max(0.4, cursorSize * 0.03))
+            .foregroundStyle(Color(hex: "3B82F6"))
+            .overlay {
+                Image(nsImage: Self.cursorNSImage)
+                    .resizable()
+                    .renderingMode(.template)
+                    .interpolation(.high)
+                    .antialiased(true)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: cursorSize, height: cursorSize)
+                    .foregroundStyle(Color(hex: "3B82F6").opacity(0.80))
+                    .blur(radius: max(0.55, cursorSize * 0.04))
+            }
+            .shadow(color: .black.opacity(0.24), radius: max(0.8, cursorSize * 0.04), x: 0, y: max(0.8, cursorSize * 0.04))
+            .shadow(color: .white.opacity(0.10), radius: max(0.35, cursorSize * 0.016), x: 0, y: 0)
+            .shadow(color: Color(hex: "3B82F6").opacity(0.48), radius: max(1.8, cursorSize * 0.12), x: 0, y: 0)
             .background(Color.clear)
     }
 
     private static var cursorNSImage: NSImage {
         let candidates = [
-            "/Users/davejaga/Desktop/Startups/baymax/assets/base-cursor.png",
-            "/Users/davejaga/Desktop/Startups/baymax/Resources/Assets.xcassets/BaseCursor.imageset/base-cursor.png",
-            "/Users/davejaga/Desktop/Startups/baymax/Resources/Assets/base-cursor.png",
-            "/Users/davejaga/Desktop/Startups/baymax/Resources/base-cursor.png"
+            "assets/base_cursor.png",
+            "Assets/base_cursor.png",
+            "assets.xcassets/BaseCursor.imageset/base-cursor.png",
+            "Assets.xcassets/BaseCursor.imageset/base-cursor.png"
         ]
 
         for path in candidates {
-            if FileManager.default.fileExists(atPath: path),
-               let image = NSImage(contentsOfFile: path) {
-                return image
+            if let url = Bundle.main.resourceURL?.appendingPathComponent(path),
+               FileManager.default.fileExists(atPath: url.path),
+               let image = NSImage(contentsOf: url) {
+                return trimmedCursorImage(image)
             }
         }
 
         return NSImage(size: .init(width: 72, height: 72))
     }
 
-    @ViewBuilder
-    private var stateOverlay: some View {
-        switch mode {
-        case .idle:
-            EmptyView()
-        case .listening:
-            ListeningAccent()
-        case .thinking:
-            LoadingAccent()
-        case .teaching:
-            TalkingAccent()
+    private static func trimmedCursorImage(_ image: NSImage) -> NSImage {
+        guard
+            let tiff = image.tiffRepresentation,
+            let bitmap = NSBitmapImageRep(data: tiff)
+        else {
+            return image
         }
-    }
 
-    private func startBlinkLoop() {
-        func blink() {
-            let delay = Double.random(in: 2.8...5.5)
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                withAnimation(.easeInOut(duration: 0.08)) { isBlinking = true }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.easeInOut(duration: 0.08)) { isBlinking = false }
-                    blink()
+        let width = bitmap.pixelsWide
+        let height = bitmap.pixelsHigh
+
+        guard width > 1, height > 1 else { return image }
+
+        var minX = width
+        var minY = height
+        var maxX = -1
+        var maxY = -1
+
+        for y in 0..<height {
+            for x in 0..<width {
+                guard let color = bitmap.colorAt(x: x, y: y), color.alphaComponent > 0.02 else {
+                    continue
                 }
+                minX = min(minX, x)
+                minY = min(minY, y)
+                maxX = max(maxX, x)
+                maxY = max(maxY, y)
             }
         }
 
-        blink()
-    }
-}
+        guard maxX >= minX, maxY >= minY else { return image }
 
-// MARK: - Idle
+        let cropRect = CGRect(
+            x: minX,
+            y: minY,
+            width: maxX - minX + 1,
+            height: maxY - minY + 1
+        )
 
-private struct IdleAccent: View {
-    let isBlinking: Bool
-
-    var body: some View {
-        // Keep it extremely subtle in idle; the asset itself is the star.
-        Group {
-            if isBlinking {
-                Capsule()
-                    .fill(Color.black.opacity(0.85))
-                    .frame(width: 16, height: 2)
-                    .offset(y: -1)
-            }
+        guard
+            let cgImage = bitmap.cgImage,
+            let cropped = cgImage.cropping(to: cropRect)
+        else {
+            return image
         }
-        .animation(.easeInOut(duration: 0.08), value: isBlinking)
+
+        return NSImage(cgImage: cropped, size: NSSize(width: cropRect.width, height: cropRect.height))
     }
+
+    private static var systemCursorSize: CGFloat {
+        let native = max(NSCursor.arrow.image.size.width, NSCursor.arrow.image.size.height)
+        guard native.isFinite, native >= 8 else { return 13 }
+        // Keep in a normal pointer range regardless of display scaling quirks.
+        return native.clamped(to: 13...18)
+    }
+
 }
 
-// MARK: - Listening
+// MARK: - Listening (voice glyph only, no bubble wrapper)
 
-private struct ListeningAccent: View {
+private struct VoiceGlyph: View {
     @State private var pulse = false
 
     var body: some View {
-        ZStack {
-            HStack(spacing: 2.5) {
-                ForEach(0..<5, id: \.self) { i in
-                    RoundedRectangle(cornerRadius: 1)
-                        .fill(Color(hex: "22C55E"))
-                        .frame(width: 2.5, height: barHeight(index: i))
-                        .shadow(color: Color(hex: "22C55E").opacity(0.55), radius: 2)
-                }
+        HStack(spacing: 2) {
+            ForEach(0..<4, id: \.self) { i in
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(Color(hex: "3B82F6"))
+                    .frame(width: 2.2, height: barHeight(index: i))
+                    .shadow(color: Color(hex: "3B82F6").opacity(0.50), radius: 1.8)
             }
         }
-        .frame(width: 36, height: 36)
+        .frame(width: 18, height: 16)
         .onAppear { pulse = true }
         .animation(
-            .easeInOut(duration: 0.28).repeatForever(autoreverses: true),
+            .easeInOut(duration: 0.22).repeatForever(autoreverses: true),
             value: pulse
         )
     }
 
     private func barHeight(index: Int) -> CGFloat {
-        let base: CGFloat = 4
-        let heights: [CGFloat] = [7, 12, 6, 10, 7]
+        let base: CGFloat = 4.5
+        let heights: [CGFloat] = [10, 6.5, 11, 7]
         return pulse ? heights[index] : base
     }
 }
 
-// MARK: - Thinking
+// MARK: - Thinking (loader)
 
-private struct LoadingAccent: View {
-    @State private var move = false
+private struct LoadingGlyph: View {
+    @State private var spin = false
 
     var body: some View {
         ZStack {
-            Capsule()
-                .fill(Color(hex: "FBBF24").opacity(0.18))
-                .frame(width: 28, height: 4)
-                .offset(y: 24)
+            Circle()
+                .stroke(Color(hex: "3B82F6").opacity(0.18), lineWidth: 2)
+                .frame(width: 13, height: 13)
 
             Circle()
-                .fill(Color(hex: "FBBF24"))
-                .frame(width: 8, height: 8)
-                .offset(x: move ? 5 : -5, y: 12)
-                .shadow(color: Color(hex: "FBBF24").opacity(0.55), radius: 4)
+                .trim(from: 0.12, to: 0.44)
+                .stroke(
+                    Color(hex: "3B82F6"),
+                    style: StrokeStyle(lineWidth: 2.2, lineCap: .round)
+                )
+                .frame(width: 13, height: 13)
+                .rotationEffect(.degrees(spin ? 360 : 0))
+                .shadow(color: Color(hex: "3B82F6").opacity(0.45), radius: 3)
         }
-        .frame(width: 36, height: 36)
-        .onAppear { move = true }
-        .animation(
-            .easeInOut(duration: 0.55).repeatForever(autoreverses: true),
-            value: move
-        )
-    }
-}
-
-// MARK: - Teaching / Talking
-
-private struct TalkingAccent: View {
-    @State private var bob = false
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-            HStack(spacing: 4) {
-                Circle().fill(Color.white.opacity(0.9)).frame(width: 4, height: 4)
-                RoundedRectangle(cornerRadius: 1)
-                    .fill(Color(hex: "60A5FA"))
-                    .frame(width: 10, height: bob ? 5 : 2)
-                Circle().fill(Color.white.opacity(0.9)).frame(width: 4, height: 4)
-            }
-            .shadow(color: Color(hex: "60A5FA").opacity(0.45), radius: 4)
-            .offset(y: 11)
-        }
-        .frame(width: 72, height: 72)
-        .onAppear { bob = true }
-        .animation(
-            .easeInOut(duration: 0.25).repeatForever(autoreverses: true),
-            value: bob
-        )
+        .frame(width: 15, height: 15)
+        .onAppear { spin = true }
+        .animation(.linear(duration: 0.8).repeatForever(autoreverses: false), value: spin)
     }
 }

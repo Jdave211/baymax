@@ -27,27 +27,17 @@ enum DotEnv {
 
     private static func candidateURLs() -> [URL] {
         let fm = FileManager.default
-        let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
         let bundleURL = Bundle.main.bundleURL
-
-        // Use compile-time source path to locate project root
-        let sourceFile = URL(fileURLWithPath: #filePath)
-        let projectRoot = sourceFile
-            .deletingLastPathComponent()  // Utilities/
-            .deletingLastPathComponent()  // Sources/
-            .deletingLastPathComponent()  // project root
+        let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+            .first?
+            .appendingPathComponent("Baymax", isDirectory: true)
+            .appendingPathComponent(".env")
 
         return [
-            // Best bet: derive from source file at compile time
-            projectRoot.appendingPathComponent(".env"),
-            // Hardcoded project path as fallback
-            URL(fileURLWithPath: "/Users/davejaga/Desktop/Startups/baymax/.env"),
-            // CWD (works if launched from project dir)
-            cwd.appendingPathComponent(".env"),
-            // Bundle-relative (Xcode DerivedData layout)
+            appSupport,
             bundleURL.deletingLastPathComponent().appendingPathComponent(".env"),
             bundleURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent(".env"),
-        ]
+        ].compactMap { $0 }
     }
 
     private static func parse(_ contents: String) -> [String: String] {

@@ -34,12 +34,12 @@ targets:
         COMBINE_HIDPI_IMAGES: true
     postBuildScripts:
       - name: "Install to ~/Applications"
+        inputFiles:
+          - "$(BUILT_PRODUCTS_DIR)/$(PRODUCT_NAME).app"
+          - "$(SRCROOT)/Resources"
+          - "$(SRCROOT)/assets"
+          - "$(SRCROOT)/Scripts/install_to_app.sh"
+        outputFiles:
+          - "$(DERIVED_FILE_DIR)/Baymax.install.stamp"
         script: |
-          DEST="$HOME/Applications/Baymax.app"
-          SRC="$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app"
-          echo "Installing $SRC → $DEST"
-          rm -rf "$DEST"
-          cp -R "$SRC" "$DEST"
-          # Re-sign with consistent identity so TCC recognises it across rebuilds
-          codesign --force --deep --sign - "$DEST" 2>/dev/null || true
-          echo "Install done. Launch from $DEST to keep permissions."
+          bash "$SRCROOT/Scripts/install_to_app.sh"

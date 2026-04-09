@@ -44,7 +44,7 @@ final class TextToSpeech {
                 let client = ElevenLabsClient(apiKey: elevenLabsKey)
                 let mp3Data = try await client.textToSpeech(
                     text: text,
-                    voiceId: elevenLabsVoiceId.isEmpty ? "21m00Tcm4TlvDq8ikWAM" : elevenLabsVoiceId
+                    voiceId: elevenLabsVoiceId.isEmpty ? AppState.defaultElevenLabsVoiceId : elevenLabsVoiceId
                 )
 
                 let tempURL = FileManager.default.temporaryDirectory
@@ -69,7 +69,7 @@ final class TextToSpeech {
         if !openAIKey.isEmpty {
             do {
                 let client = OpenAIClient(apiKey: openAIKey)
-                let audioData = try await client.textToSpeech(text: text, voice: "nova")
+                let audioData = try await client.textToSpeech(text: text, voice: "alloy")
 
                 let tempURL = FileManager.default.temporaryDirectory
                     .appendingPathComponent("baymax_\(UUID().uuidString).aac")

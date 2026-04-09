@@ -5,10 +5,54 @@ import AppKit
 // MARK: - CGImage → Base64
 
 extension CGImage {
-    func jpegBase64(quality: CGFloat = 0.5) -> String {
-        let rep = NSBitmapImageRep(cgImage: self)
+    var imageSize: CGSize {
+        CGSize(width: width, height: height)
+    }
+
+    func jpegBase64(quality: CGFloat = 0.5, maxDimension: CGFloat? = nil) -> String {
+        let sourceImage = maxDimension.flatMap { resized(maxDimension: $0) } ?? self
+        let rep = NSBitmapImageRep(cgImage: sourceImage)
         guard let data = rep.representation(using: .jpeg, properties: [.compressionFactor: quality]) else { return "" }
         return data.base64EncodedString()
+    }
+
+    func resized(maxDimension: CGFloat) -> CGImage? {
+        guard max(width, height) > Int(maxDimension) else { return self }
+
+        let scale = maxDimension / CGFloat(max(width, height))
+        let newWidth = max(1, Int((CGFloat(width) * scale).rounded()))
+        let newHeight = max(1, Int((CGFloat(height) * scale).rounded()))
+
+        guard
+            let colorSpace = colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB),
+            let context = CGContext(
+                data: nil,
+                width: newWidth,
+                height: newHeight,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: colorSpace,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        else {
+            return nil
+        }
+
+        context.interpolationQuality = .high
+        context.draw(self, in: CGRect(x: 0, y: 0, width: newWidth, height: newHeight))
+        return context.makeImage()
+    }
+
+    func cropped(to rect: CGRect) -> CGImage? {
+        let integralRect = CGRect(
+            x: rect.origin.x.rounded(.down),
+            y: rect.origin.y.rounded(.down),
+            width: rect.size.width.rounded(.up),
+            height: rect.size.height.rounded(.up)
+        ).intersection(CGRect(origin: .zero, size: imageSize))
+
+        guard !integralRect.isNull, integralRect.width >= 1, integralRect.height >= 1 else { return nil }
+        return cropping(to: integralRect)
     }
 }
 
