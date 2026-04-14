@@ -1,0 +1,18 @@
+name = "clicky-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[ai]
+binding = "AI"
+
+[vars]
+ELEVENLABS_VOICE_ID = "fI7zKH1sH6G6Q8W6fnyw"
+SUPABASE_URL = "https://npkahoanhvoschasvxka.supabase.co"
+
+# Secrets (set via `wrangler secret put <NAME>`):
+# - ANTHROPIC_API_KEY
+# - ELEVENLABS_API_KEY  
+# - ASSEMBLYAI_API_KEY
+# - STRIPE_SECRET_KEY
+# - STRIPE_WEBHOOK_SECRET (get from Stripe Dashboard → Webhooks)
+# - SUPABASE_SERVICE_KEY (get from Supabase Dashboard → Settings → API → service_role key)

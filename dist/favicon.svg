@@ -1,0 +1,24 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle for better visibility -->
+  <circle cx="16" cy="16" r="16" fill="#1a1a2e"/>
+  
+  <!-- Triangle cursor in indigo with glow -->
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Equilateral triangle rotated -35 degrees, scaled to fit nicely in icon -->
+  <g transform="translate(16, 16) rotate(-35) translate(-6, -6)">
+    <path 
+      d="M 6 1.803 L 0.268 10.598 L 11.732 10.598 Z" 
+      fill="#6366f1" 
+      filter="url(#glow)"
+    />
+  </g>
+</svg>

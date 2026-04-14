@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baymac - An AI buddy that lives on your Mac</title>
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/baymax.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #000000;
+            --text-secondary: #666666;
+            --accent: #000000;
+            --card-bg: #f9f9f9;
+            --border: #eeeeee;
+            --btn-disabled: #777777;
+            --btn-active: #000000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        header {
+            padding: 80px 0 40px;
+            text-align: center;
+        }
+
+        .eyebrow-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 0 auto 32px;
+            width: 100%;
+        }
+
+        .baymax-mini {
+            height: 100px;
+            width: auto;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .eyebrow {
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .eyebrow-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transform: translateX(-60px); 
+        }
+
+        h1 {
+            font-size: 64px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 32px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .description {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 48px;
+            font-weight: 400;
+        }
+
+        .cta-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 80px;
+        }
+
+        .btn-download {
+            background-color: var(--btn-active);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s ease, transform 0.1s;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-1px);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            max-width: 800px;
+            margin: 0 auto 120px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            text-align: left;
+            font-size: 15px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: var(--border);
+            color: var(--text);
+            transform: scale(1.02);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            background: #111;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+            z-index: 9999;
+            transform: translateY(100px) scale(0.9);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #ff3b30;
+        }
+
+        /* Nav Bar */
+        .nav-bar {
+            display: flex;
+            justify-content: flex-end;
+            padding: 24px 40px;
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .btn-pricing-nav {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-pricing-nav:hover {
+            background: var(--card-bg);
+            border-color: #ccc;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 1100px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.1);
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        .modal-content::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .close-modal:hover {
+            background: var(--card-bg);
+            color: var(--text);
+        }
+
+        /* Pricing Section */
+        .pricing-section {
+            padding: 20px 0 0;
+        }
+
+        .pricing-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .pricing-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .pricing-grid.three-col {
+            grid-template-columns: repeat(3, 1fr);
+            max-width: 1000px;
+        }
+
+        .pricing-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: left;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .pricing-card.featured {
+            border: 2px solid var(--accent);
+            position: relative;
+        }
+
+        .pricing-card.featured::before {
+            content: "BEST VALUE";
+            position: absolute;
+            top: -12px;
+            left: 24px;
+            background: var(--accent);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.05em;
+        }
+
+        .plan-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .plan-price {
+            font-size: 40px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .plan-price span {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .plan-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .plan-features li {
+            padding: 8px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .plan-features li::before {
+            content: "✓";
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        .btn-plan {
+            width: 100%;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-plan.primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-plan.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-plan.secondary {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-plan.secondary:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-plan:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Lifetime Offer Styles */
+        .lifetime-offer {
+            margin: 24px auto 0;
+            max-width: 1000px;
+            background: linear-gradient(135deg, #111 0%, #222 100%);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            color: white;
+            overflow: hidden;
+        }
+
+        .lifetime-badge {
+            position: absolute;
+            top: 16px;
+            left: -40px;
+            background: #ff3b30;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 44px;
+            transform: rotate(-45deg);
+            letter-spacing: 0.1em;
+            box-shadow: 0 4px 12px rgba(255,59,48,0.4);
+        }
+
+        .lifetime-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 32px;
+            position: relative;
+            z-index: 1;
+            padding-left: 20px;
+        }
+
+        .lifetime-text {
+            flex: 1;
+        }
+
+        .lifetime-text h3 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .lifetime-text p {
+            color: #aaa;
+            font-size: 16px;
+        }
+
+        .lifetime-price {
+            text-align: center;
+        }
+
+        .lifetime-amount {
+            font-size: 48px;
+            font-weight: 800;
+            display: block;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .lifetime-note {
+            font-size: 14px;
+            color: #aaa;
+            display: block;
+        }
+
+        .counter-container {
+            margin-top: 16px;
+        }
+
+        .counter-text {
+            font-size: 15px;
+            color: #aaa;
+            font-weight: 500;
+        }
+
+        #spotsRemaining {
+            color: white;
+            font-weight: 800;
+            font-size: 16px;
+            background: #ff3b30;
+            padding: 2px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        .btn-plan.lifetime-btn {
+            background: white;
+            color: black;
+            width: auto;
+            padding: 16px 32px;
+            white-space: nowrap;
+        }
+
+        .btn-plan.lifetime-btn:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        /* Baymax Cursor Follower */
+        #baymaxFollower {
+            position: fixed;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            will-change: transform;
+            color: #5856D6; /* Apple Indigo (Hiro) */
+            filter: drop-shadow(0px 0px 8px rgba(88, 86, 214, 1.0));
+        }
+
+        #baymaxFollower svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-35deg);
+            overflow: visible;
+        }
+
+        @media (max-width: 768px) {
+            .eyebrow-wrapper {
+                transform: translateX(-40px);
+            }
+            .eyebrow {
+                font-size: 16px;
+            }
+            .baymax-mini {
+                height: 70px;
+            }
+            h1 {
+                font-size: 40px;
+            }
+            .cta-container {
+                flex-direction: column;
+                width: 100%;
+            }
+            .btn-download {
+                width: 100%;
+                justify-content: center;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            .pricing-grid.three-col {
+                grid-template-columns: 1fr;
+            }
+            .lifetime-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 24px;
+            }
+            .lifetime-price {
+                text-align: left;
+            }
+            .btn-plan.lifetime-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="toast" class="toast"></div>
+    <div id="baymaxFollower">
+        <!-- Exact mathematical recreation of the SwiftUI Triangle() shape
+             scaled for a 16x16 bounding box, with overflow to prevent clipping -->
+        <svg viewBox="-2 -2 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="8,-1.24 0,12.62 16,12.62" />
+        </svg>
+    </div>
+    <nav class="nav-bar">
+        <button class="btn-pricing-nav" onclick="openPricingModal()">Pricing</button>
+    </nav>
+    <div class="container">
+        <header>
+            <div class="eyebrow-container">
+                <div class="eyebrow-wrapper">
+                    <img src="baymax.png" alt="Baymac" class="baymax-mini">
+                    <div class="eyebrow">Meet Baymac</div>
+                </div>
+            </div>
+            <h1>an ai buddy that lives on your mac.</h1>
+            <p class="description">
+                it sits right next to your cursor and sees everything on your screen. press a shortcut, ask a question out loud, and it walks you through whatever you're working on. like a friend who's really good at everything.
+                <br><span style="font-size: 14px; opacity: 0.8; margin-top: 8px; display: block;">* flip through all big hero 6 characters as well</span>
+            </p>
+            
+            <div class="cta-container" style="display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <button id="googleSignInBtn" class="btn-download active" onclick="handleGoogleSignIn()" style="cursor: pointer; pointer-events: auto;">
+                    <svg id="googleLogo" width="20" height="20" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    <span id="btnText">sign in with google to download</span>
+                </button>
+                <div id="connectAppContainer" style="display: none;">
+                    <button class="btn-download active" onclick="forceConnectApp()" style="cursor: pointer; pointer-events: auto; background: #6366f1; color: white;">
+                        <span id="connectBtnText">Connect to installed Mac App</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card">"how do i color grade this in davinci resolve?"</div>
+                <div class="card">"how do i make this t-shirt design better?"</div>
+                <div class="card">"teach me what this after effects panel does"</div>
+                <div class="card">"help me design this logo in figma"</div>
+                <div class="card">"add a browser skill to my codex"</div>
+                <div class="card">"walk me through setting up this project"</div>
+            </div>
+        </header>
+    </div>
+
+    <div class="modal-overlay" id="pricingModal" onclick="handleModalClick(event)">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closePricingModal()">&times;</button>
+            <section class="pricing-section">
+                <div class="container">
+            <h2 class="pricing-title">Simple pricing</h2>
+            <p class="pricing-subtitle">Start free, upgrade when you need more</p>
+
+            <div class="pricing-grid three-col">
+                <div class="pricing-card">
+                    <div class="plan-name">Free</div>
+                    <div class="plan-price">$0<span>/month</span></div>
+                    <p class="plan-description">Try Baymac out</p>
+                    <ul class="plan-features">
+                        <li>25 voice interactions per month</li>
+                        <li>Screen understanding</li>
+                        <li>All Big Hero 6 characters</li>
+                        <li style="color: var(--text); font-weight: 500;">+ Pay-as-you-go option</li>
+                    </ul>
+                    <button class="btn-plan secondary" id="freePlanBtn" onclick="handleFreePlan()">
+                        Get Started Free
+                    </button>
+                    <button class="btn-plan secondary" id="paygBtn" onclick="handlePaygPlan()" style="margin-top: 8px; font-size: 13px; padding: 10px;">
+                        Enable Pay-as-you-go
+                    </button>
+                </div>
+
+                <div class="pricing-card featured">
+                    <div class="plan-name">Pro</div>
+                    <div class="plan-price">$10<span>/month</span></div>
+                    <p class="plan-description">For daily use</p>
+                    <ul class="plan-features">
+                        <li>500 voice interactions per month</li>
+                        <li>Multi-step guidance</li>
+                        <li>Conversation memory</li>
+                        <li>All Big Hero 6 characters</li>
+                    </ul>
+                    <button class="btn-plan primary" id="proPlanBtn" onclick="handleProPlan()">
+                        Get Pro
+                    </button>
+                </div>
+
+                <div class="pricing-card">
+                    <div class="plan-name">Max</div>
+                    <div class="plan-price">$25<span>/month</span></div>
+                    <p class="plan-description">For power users</p>
+                    <ul class="plan-features">
+                        <li>1,500 voice interactions per month</li>
+                        <li>Multi-step guidance</li>
+                        <li>Priority AI responses</li>
+                        <li>All Big Hero 6 characters</li>
+                    </ul>
+                    <button class="btn-plan secondary" id="maxPlanBtn" onclick="handleMaxPlan()">
+                        Go Max
+                    </button>
+                </div>
+            </div>
+
+            <div class="lifetime-offer">
+                <div class="lifetime-badge">LIMITED</div>
+                <div class="lifetime-content">
+                    <div class="lifetime-text">
+                        <h3>Lifetime Access</h3>
+                        <p>Everything in Max + priority support & customization.</p>
+                        <p style="margin-top: 4px; font-weight: 600; color: white;">Pay once, use forever.</p>
+                        
+                        <!-- Dynamic Counter -->
+                        <div class="counter-container">
+                            <div class="counter-text">
+                                <span id="spotsRemaining">45</span> spots remaining
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lifetime-price">
+                        <span class="lifetime-amount">$149</span>
+                        <span class="lifetime-note">one-time payment</span>
+                    </div>
+                    <button class="btn-plan lifetime-btn" id="lifetimePlanBtn" onclick="handleLifetimePlan()">
+                        Get Lifetime Access
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+        </div>
+    </div>
+
+    <!-- Public client config only — generate with: node scripts/generate-site-config.mjs dist/site-config.js -->
+    <script src="site-config.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        const site = window.BAYMAC_SITE || {};
+        const supabaseUrl = site.supabaseUrl || '';
+        const supabaseAnonKey = site.supabaseAnonKey || '';
+        const stripePublicKey = site.stripePublishableKey || '';
+        const workerUrl = site.workerUrl || 'https://clicky-proxy.baymac.workers.dev';
+
+        if (!supabaseUrl || !supabaseAnonKey) {
+            console.warn('Baymac: site-config.js is missing SUPABASE_URL / SUPABASE_ANON_KEY. Run node scripts/generate-site-config.mjs from env before deploy.');
+        }
+
+        const supabaseClient = supabase.createClient(
+            supabaseUrl || 'https://placeholder.invalid',
+            supabaseAnonKey || 'placeholder'
+        );
+        
+        // Download URL — update this after uploading DMG to hosting
+        // Examples:
+        //   Cloudflare R2: 'https://pub-xxxx.r2.dev/Baymac.dmg'
+        //   Custom domain: 'https://download.baymac.so/Baymac.dmg'
+        //   GitHub: 'https://github.com/yourusername/baymax/releases/latest/download/Baymac.dmg'
+        const DOWNLOAD_URL = '/download/Baymac.dmg';
+        
+        const PRO_PRICE_ID = 'price_1TKbITPL9XW4eka1hmaFcMU0';
+        const MAX_PRICE_ID = 'price_1TKbJePL9XW4eka1dJijWgUV';
+        const LIFETIME_PRICE_ID = 'price_1TKRgJPL9XW4eka1Nazy9Zvi';
+
+        let currentUser = null;
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.innerText = message;
+            if (isError) {
+                toast.classList.add('error');
+            } else {
+                toast.classList.remove('error');
+            }
+            toast.classList.add('show');
+            
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+
+        function showConnectedToAppScreen(email, deepLinkUrl) {
+            document.body.innerHTML = `
+                <div style="
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #0a0a0f;
+                    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+                    color: white;
+                    text-align: center;
+                    padding: 24px;
+                ">
+                    <div style="max-width: 380px;">
+                        <div style="
+                            width: 56px; height: 56px;
+                            margin: 0 auto 20px;
+                            background: rgba(99, 102, 241, 0.15);
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 28px;
+                        ">&#10003;</div>
+                        <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 8px;">Connected to Baymac</h1>
+                        <p style="font-size: 14px; color: rgba(255,255,255,0.5); margin: 0 0 24px;">
+                            Signed in as <strong style="color: rgba(255,255,255,0.8);">${email || 'your account'}</strong>
+                        </p>
+                        <a href="${deepLinkUrl}" style="
+                            display: inline-block;
+                            padding: 12px 32px;
+                            background: #6366f1;
+                            color: white;
+                            border-radius: 10px;
+                            font-size: 14px;
+                            font-weight: 600;
+                            text-decoration: none;
+                            transition: opacity 0.2s;
+                        " onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Return to Baymac</a>
+                        <p style="font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 16px;">
+                            You can close this tab.
+                        </p>
+                    </div>
+                </div>
+            `;
+            // Try to close the tab after a short delay — works when the tab
+            // was opened programmatically by the app
+            setTimeout(() => { try { window.close(); } catch(e) {} }, 1500);
+        }
+
+        function openPricingModal() {
+            document.getElementById('pricingModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePricingModal() {
+            document.getElementById('pricingModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function handleModalClick(event) {
+            if (event.target === document.getElementById('pricingModal')) {
+                closePricingModal();
+            }
+        }
+
+        async function handleGoogleSignIn() {
+            const btnText = document.getElementById('btnText');
+            btnText.innerText = "redirecting...";
+
+            const isMacClient = localStorage.getItem('client') === 'mac';
+            const redirectUrl = isMacClient
+                ? (window.location.origin + window.location.pathname + '?client=mac')
+                : window.location.origin + window.location.pathname;
+
+            const { error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: redirectUrl,
+                }
+            });
+
+            if (error) {
+                showToast("Error: " + error.message, true);
+                btnText.innerText = "sign in with google to download";
+            }
+        }
+
+        // Global force connect
+        function forceConnectApp() {
+            if (currentUser && supabaseClient) {
+                supabaseClient.auth.getSession().then(({ data: { session } }) => {
+                    if (session) {
+                        const token = session.access_token;
+                        const userId = session.user.id;
+                        const deepLinkUrl = `baymac://auth?access_token=${token}&userId=${userId}`;
+                        window.location.href = deepLinkUrl;
+                        showConnectedToAppScreen(session.user.email, deepLinkUrl);
+                    }
+                });
+            } else {
+                showToast("Please sign in first", true);
+            }
+        }
+
+        function triggerDownload() {
+            // Send auth token to the Mac app via deep link before downloading.
+            // If the app is already installed, it picks up the session automatically.
+            // If not yet installed, the user downloads and signs in from the app.
+            if (currentUser) {
+                const session = supabaseClient.auth.getSession();
+                session.then(({ data: { session } }) => {
+                    if (session) {
+                        // Fire the deep link to pre-authenticate the app (works if app is installed)
+                        const authLink = document.createElement('a');
+                        authLink.href = `baymac://auth?access_token=${session.access_token}&userId=${session.user.id}`;
+                        authLink.click();
+                    }
+                });
+            }
+            // Small delay so the deep link fires before the download redirect
+            setTimeout(() => {
+                window.location.href = DOWNLOAD_URL;
+            }, 500);
+        }
+
+        async function handleFreePlan() {
+            if (!currentUser) {
+                closePricingModal();
+                showToast("Please sign in with Google first", true);
+                return;
+            }
+            closePricingModal();
+            showToast("You're all set! Downloading Baymac...");
+            triggerDownload();
+        }
+
+        async function handleCheckout(priceId, btnId, defaultText, checkoutParam) {
+            const btn = document.getElementById(btnId);
+            btn.disabled = true;
+            btn.innerText = "Loading...";
+
+            if (!currentUser) {
+                // Sign in with Google first, then come back to checkout
+                const { error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + window.location.pathname + '?checkout=' + checkoutParam,
+                    }
+                });
+
+                if (error) {
+                    showToast("Error: " + error.message, true);
+                    btn.disabled = false;
+                    btn.innerText = defaultText;
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`${workerUrl}/stripe/checkout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        priceId: priceId,
+                        userId: currentUser.id,
+                        email: currentUser.email,
+                        successUrl: window.location.origin + '/success.html',
+                        cancelUrl: window.location.origin,
+                        tier: checkoutParam,
+                    }),
+                });
+
+                const data = await response.json();
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    throw new Error(data.error || 'Failed to create checkout session');
+                }
+            } catch (error) {
+                console.error('Checkout error:', error);
+                showToast("Error: " + error.message, true);
+                btn.disabled = false;
+                btn.innerText = defaultText;
+            }
+        }
+
+        function handleProPlan() {
+            handleCheckout(PRO_PRICE_ID, 'proPlanBtn', 'Get Pro', 'pro');
+        }
+
+        function handleMaxPlan() {
+            handleCheckout(MAX_PRICE_ID, 'maxPlanBtn', 'Go Max', 'max');
+        }
+
+        function handleLifetimePlan() {
+            handleCheckout(LIFETIME_PRICE_ID, 'lifetimePlanBtn', 'Get Lifetime Access', 'lifetime');
+        }
+
+        async function handlePaygPlan() {
+            const btn = document.getElementById('paygBtn');
+            
+            if (!currentUser) {
+                // Sign in with Google first
+                btn.disabled = true;
+                btn.innerText = "Loading...";
+                const { error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + window.location.pathname + '?enablePayg=true',
+                    }
+                });
+
+                if (error) {
+                    showToast("Error: " + error.message, true);
+                    btn.disabled = false;
+                    btn.innerText = "Enable Pay-as-you-go";
+                }
+                return;
+            }
+
+            // Show cap selector modal
+            showPaygCapSelector();
+        }
+
+        function showPaygCapSelector() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+
+            const capOptions = [
+                { cents: 500, label: '$5/month', interactions: 71 },
+                { cents: 1000, label: '$10/month', interactions: 142 },
+                { cents: 2000, label: '$20/month', interactions: 285 },
+                { cents: 5000, label: '$50/month', interactions: 714 }
+            ];
+
+            modal.innerHTML = `
+                <div style="background: #1a1a1a; border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+                    <h3 style="color: #fff; margin: 0 0 8px; font-size: 24px;">Choose Your Monthly Cap</h3>
+                    <p style="color: #999; margin: 0 0 24px; font-size: 14px;">$0.07 per interaction after your free 25</p>
+                    <div id="capOptions" style="display: flex; flex-direction: column; gap: 12px;">
+                        ${capOptions.map(opt => `
+                            <button data-cap="${opt.cents}" style="
+                                background: #2a2a2a;
+                                border: 2px solid #333;
+                                border-radius: 12px;
+                                padding: 16px;
+                                color: #fff;
+                                cursor: pointer;
+                                text-align: left;
+                                transition: all 0.2s;
+                            " onmouseover="this.style.borderColor='#4a9eff'" onmouseout="this.style.borderColor='#333'">
+                                <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${opt.label}</div>
+                                <div style="color: #999; font-size: 13px;">Up to ${opt.interactions} interactions</div>
+                            </button>
+                        `).join('')}
+                    </div>
+                    <button id="cancelPayg" style="
+                        background: transparent;
+                        border: none;
+                        color: #999;
+                        width: 100%;
+                        padding: 12px;
+                        margin-top: 16px;
+                        cursor: pointer;
+                        font-size: 14px;
+                    ">Cancel</button>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            document.getElementById('cancelPayg').onclick = () => modal.remove();
+            document.querySelectorAll('[data-cap]').forEach(btn => {
+                btn.onclick = () => {
+                    const capCents = parseInt(btn.getAttribute('data-cap'));
+                    modal.remove();
+                    enablePaygWithCap(capCents);
+                };
+            });
+        }
+
+        async function enablePaygWithCap(capCents) {
+            const btn = document.getElementById('paygBtn');
+            btn.disabled = true;
+            btn.innerText = "Enabling...";
+
+            try {
+                const response = await fetch(`${workerUrl}/stripe/payg-subscribe`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.id,
+                        email: currentUser.email,
+                        capCents: capCents,
+                    }),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const capLabel = (capCents / 100).toFixed(0);
+                    showToast(`Pay-as-you-go enabled! You'll be charged $0.07 per interaction after your free 25, capped at $${capLabel}/month.`);
+                    btn.innerText = "Pay-as-you-go Enabled ✓";
+                    btn.disabled = true;
+                } else {
+                    throw new Error(data.error || 'Failed to enable pay-as-you-go');
+                }
+            } catch (error) {
+                console.error('PAYG error:', error);
+                showToast("Error: " + error.message, true);
+                btn.disabled = false;
+                btn.innerText = "Enable Pay-as-you-go";
+            }
+        }
+
+        // Realtime Lifetime Counter Logic
+        const MAX_LIFETIME_SPOTS = 50;
+        const INITIAL_SPOTS_CLAIMED = 5; // To start at 45 remaining
+
+        function updateCounterDisplay(realCount) {
+            let totalClaimed = INITIAL_SPOTS_CLAIMED + (realCount || 0);
+            if (totalClaimed > MAX_LIFETIME_SPOTS) totalClaimed = MAX_LIFETIME_SPOTS;
+            
+            let spotsRemaining = MAX_LIFETIME_SPOTS - totalClaimed;
+            
+            const spotsRemainingEl = document.getElementById('spotsRemaining');
+            
+            if (spotsRemainingEl) {
+                spotsRemainingEl.innerText = spotsRemaining;
+                
+                if (spotsRemaining <= 0) {
+                    const btn = document.getElementById('lifetimePlanBtn');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerText = "Sold Out";
+                    }
+                }
+            }
+        }
+
+        async function initLifetimeCounter() {
+            // Initial fetch
+            const { data, error } = await supabaseClient
+                .from('public_stats')
+                .select('value')
+                .eq('id', 'lifetime_users')
+                .single();
+                
+            if (data) {
+                updateCounterDisplay(data.value);
+            } else {
+                updateCounterDisplay(0); // Fallback
+            }
+
+            // Realtime subscription via WebSockets
+            supabaseClient
+                .channel('public-stats-channel')
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'public_stats', filter: 'id=eq.lifetime_users' },
+                    (payload) => {
+                        if (payload.new && payload.new.value !== undefined) {
+                            updateCounterDisplay(payload.new.value);
+                        }
+                    }
+                )
+                .subscribe();
+        }
+
+        window.onload = async () => {
+            initLifetimeCounter();
+
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // Track Mac client origin so we know to redirect after auth
+            if (urlParams.get('client') === 'mac') {
+                localStorage.setItem('client', 'mac');
+                document.getElementById('btnText').innerText = "sign in to connect mac app";
+                showToast("Sign in with Google to connect your Mac app.");
+            }
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                // Mac client flow: redirect tokens back to the native app
+                if (localStorage.getItem('client') === 'mac') {
+                    localStorage.removeItem('client');
+                    const token = session.access_token;
+                    const userId = session.user.id;
+                    const deepLinkUrl = `baymac://auth?access_token=${token}&userId=${userId}`;
+                    window.location.href = deepLinkUrl;
+                    showConnectedToAppScreen(session.user.email, deepLinkUrl);
+                    return;
+                }
+
+                    currentUser = session.user;
+                    document.getElementById('btnText').innerText = "download baymac";
+                    document.getElementById('googleLogo').style.display = "none";
+                    document.getElementById('googleSignInBtn').onclick = () => { triggerDownload(); };
+                    document.getElementById('freePlanBtn').innerText = "Download Free";
+                    const connectContainer = document.getElementById('connectAppContainer');
+                    if (connectContainer) connectContainer.style.display = "block";
+
+                // Auto-resume checkout or payg if the user was redirected here after sign-in
+                const checkoutParam = urlParams.get('checkout');
+                const enablePayg = urlParams.get('enablePayg');
+                
+                if (checkoutParam) {
+                    window.history.replaceState({}, '', window.location.pathname);
+                    openPricingModal();
+
+                    if (checkoutParam === 'pro') handleProPlan();
+                    else if (checkoutParam === 'max') handleMaxPlan();
+                    else if (checkoutParam === 'lifetime') handleLifetimePlan();
+                } else if (enablePayg) {
+                    window.history.replaceState({}, '', window.location.pathname);
+                    openPricingModal();
+                    handlePaygPlan();
+                }
+            }
+
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                    if (localStorage.getItem('client') === 'mac') {
+                        localStorage.removeItem('client');
+                        const token = session.access_token;
+                        const userId = session.user.id;
+                        const deepLinkUrl = `baymac://auth?access_token=${token}&userId=${userId}`;
+                        window.location.href = deepLinkUrl;
+                        showConnectedToAppScreen(session.user.email, deepLinkUrl);
+                        return;
+                    }
+
+                    currentUser = session.user;
+                    showToast("Signed in successfully!");
+                    document.getElementById('btnText').innerText = "download baymac";
+                    document.getElementById('googleLogo').style.display = "none";
+                    document.getElementById('googleSignInBtn').onclick = () => { triggerDownload(); };
+                    document.getElementById('freePlanBtn').innerText = "Download Free";
+                    const connectContainer = document.getElementById('connectAppContainer');
+                    if (connectContainer) connectContainer.style.display = "block";
+                }
+            });
+        };
+
+        // Mini Baymax Cursor Follower Logic
+        const follower = document.getElementById('baymaxFollower');
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let followerX = mouseX;
+        let followerY = mouseY;
+        
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            
+            if (follower.style.opacity === '0' || follower.style.opacity === '') {
+                follower.style.opacity = '1';
+            }
+        });
+
+        function animateFollower() {
+            // Easing function for smooth follow
+            followerX += (mouseX - followerX) * 0.15;
+            followerY += (mouseY - followerY) * 0.15;
+            
+            // Offset slightly so it follows to the bottom right of the cursor
+            follower.style.transform = `translate(${followerX + 15}px, ${followerY + 15}px)`;
+            
+            requestAnimationFrame(animateFollower);
+        }
+        
+        // Only run the follower animation on non-touch devices
+        if (window.matchMedia("(pointer: fine)").matches) {
+            animateFollower();
+        }
+    </script>
+</body>
+</html>
